@@ -32,7 +32,7 @@ QuoteLineItemController.cls
 
 ##### LWC
 createOpportunityLineItem
-商談商品を作成するLWCコンポーネント
+商談商品を作成するLWCコンポーネント  
 ├createOpportunityLineItem.html  
 ├createOpportunityLineItem.css  
 └createOpportunityLineItem.js  
