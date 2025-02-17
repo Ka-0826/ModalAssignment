@@ -1,4 +1,4 @@
-# プロジェクト名：ModalProject（LWC実装課題）
+# LWC実装課題（ModalProject）
 
 ## 概要
 このプロジェクトは、Salesforceで見積のための機能を実装したものです。
