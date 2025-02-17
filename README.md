@@ -21,11 +21,11 @@ Apex: Salesforceでのサーバーサイドプログラム。データベース�
 
 ### ファイル構成
 ##### Apex
-OpportunityLineItemController.cls - 商談商品を管理するApexクラス
-OpportunityLineItemControllerTest  - 商談商品を管理するApexテストクラス
-PricebookEntryController.cls - 価格表エントリーマスターを管理するApexクラス
-QuoteLineItemController.cls - 見積品目を管理するApexクラス
-QuoteLineItemControllerTest - 見積品目を管理するApexテストクラス
+OpportunityLineItemController.cls - 商談商品を管理するApexクラス  
+OpportunityLineItemControllerTest  - 商談商品を管理するApexテストクラス  
+PricebookEntryController.cls - 価格表エントリーマスターを管理するApexクラス  
+QuoteLineItemController.cls - 見積品目を管理するApexクラス  
+QuoteLineItemControllerTest - 見積品目を管理するApexテストクラス  
 
 ##### LWC
 createOpportunityLineItem - 商談商品を作成するLWCコンポーネント  
