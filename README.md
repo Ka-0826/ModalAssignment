@@ -24,7 +24,7 @@ Apex: Salesforceでのサーバーサイドプログラム。データベース�
 OpportunityLineItemController.cls - 商談商品を管理するApexクラス  
 OpportunityLineItemControllerTest  - 商談商品を管理するApexテストクラス  
 PricebookEntryController.cls - 価格表エントリーマスターを管理するApexクラス  
-PricebookEntryController.cls - 価格表エントリーマスターを管理するApexテストクラス
+PricebookEntryController.cls - 価格表エントリーマスターを管理するApexテストクラス  
 QuoteLineItemController.cls - 見積品目を管理するApexクラス  
 QuoteLineItemControllerTest - 見積品目を管理するApexテストクラス  
 
