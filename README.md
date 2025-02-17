@@ -38,19 +38,19 @@ createOpportunityLineItem
 └createOpportunityLineItem.js  
 
 createPricebookEntry
-価格表エントリーマスターを作成するLWCコンポーネント
+価格表エントリーマスターを作成するLWCコンポーネント  
 ├createPricebookEntry.html  
 ├createPricebookEntry.css  
 └createPricebookEntry.js  
 
 createQuoteLineItem
-見積品目を作成するLWCコンポーネント
+見積品目を作成するLWCコンポーネント  
 ├createQuoteLineItem.html  
 ├createQuoteLineItem.css  
 └createQuoteLineItem.js  
 
 ### 必要な環境
-Salesforce Developer EditionまたはSandbox環境
+Salesforce Developer EditionまたはSandbox環境  
 Salesforce CLI（sfdx）
 Visual Studio Code（VSCode）
 
