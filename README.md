@@ -10,39 +10,43 @@
 「見積」レコードページから「商品を選択」ボタンを押して、商品を追加し、見積もり金額を自動的に作成します。
 
 ##### 商談商品追加機能
-「商談」レコードページから「商品を選択」ボタンを押して、商談商品を追加します。
+「商談」レコードページから「商品を選択」ボタンを押して、商品を追加します。
 
 ##### 価格表エントリーマスターの追加機能
-価格表マスタレコードページから「商品を選択」ボタンを押して、価格表エントリーマスタを追加します。
+「価格表マスタ」レコードページから「商品を選択」ボタンを押して、商品を追加します。
 
 ### 使用技術
-LWC (Lightning Web Components): Salesforceで使用されるコンポーネントフレームワーク。フロントエンドでユーザーインターフェースを作成します。
-Apex: Salesforceでのサーバーサイドプログラム。データベース操作やビジネスロジックの実行に使用します。
+LWC (Lightning Web Components): Salesforceで使用されるコンポーネントフレームワーク。  
+フロントエンドでユーザーインターフェースを作成します。  
+Apex: Salesforceでのサーバーサイドプログラム。データベース操作やビジネスロジックの実行に使用します。  
 
 ### ファイル構成
 ##### Apex
 OpportunityLineItemController.cls - 商談商品を管理するApexクラス  
-OpportunityLineItemControllerTest  - 商談商品を管理するApexテストクラス  
+OpportunityLineItemControllerTest.cls  - 商談商品を管理するApexテストクラス  
 PricebookEntryController.cls - 価格表エントリーマスターを管理するApexクラス  
-PricebookEntryController.cls - 価格表エントリーマスターを管理するApexテストクラス  
+PricebookEntryControllerTest.cls - 価格表エントリーマスターを管理するApexテストクラス  
 QuoteLineItemController.cls - 見積品目を管理するApexクラス  
-QuoteLineItemControllerTest - 見積品目を管理するApexテストクラス  
+QuoteLineItemControllerTest.cls - 見積品目を管理するApexテストクラス  
 
 ##### LWC
 createOpportunityLineItem - 商談商品を作成するLWCコンポーネント  
 ├createOpportunityLineItem.html  
 ├createOpportunityLineItem.css  
-└createOpportunityLineItem.js  
+├createOpportunityLineItem.js  
+└createOpportunityLineItem.js-meta.xml  
 
 createPricebookEntry - 価格表エントリーマスターを作成するLWCコンポーネント  
 ├createPricebookEntry.html  
 ├createPricebookEntry.css  
-└createPricebookEntry.js  
+├createPricebookEntry.js  
+└createPricebookEntry.js-meta.xml  
 
 createQuoteLineItem - 見積品目を作成するLWCコンポーネント  
 ├createQuoteLineItem.html  
 ├createQuoteLineItem.css  
-└createQuoteLineItem.js  
+├createQuoteLineItem.js  
+└createQuoteLineItem.js-meta.xml  
 
 ### 環境
 Salesforce Developer Edition  
@@ -51,11 +55,12 @@ Visual Studio Code（VSCode）
 
 ### 使い方
 ##### 見積機能
-見積レコードページから「商品を選択」ボタンを押すと、商品を選択するインターフェースが表示されます。
-商品を選択すると、見積もり金額が自動的に作成されます。
+見積レコードページから「商品を選択」ボタンを押すと、商品を選択するインターフェースが表示されます。    
+商品を選択すると、見積もり金額が自動的に作成されます。  
 
 ##### 商談商品追加機能
-商談レコードページから「商品を選択」ボタンを押すと、商談に商品を追加するインターフェースが表示されます。
+商談レコードページから「商品を選択」ボタンを押すと、商品を追加するインターフェースが表示されます。  
+商品を選択すると、商談の金額が自動的に作成されます。  
 
 ##### 価格表エントリーマスター追加機能
-価格表レコードページから「商品を選択」ボタンを押すと、価格表エントリーマスタに商品を追加することができます。
+価格表レコードページから「商品を選択」ボタンを押すと、商品を追加することができます。
