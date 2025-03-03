@@ -1,0 +1,35 @@
+<template>
+    <template if:true={isFirstOpen}>
+        <!-- 商品分類 (Category1) -->
+        <lightning-combobox 
+            label="商品分類"
+            value={selectedOption1}
+            options={options1}
+            onchange={handleChange1}>
+        </lightning-combobox>
+
+        <!-- 商品分類2 (Category2) -->
+        <lightning-combobox
+            label="商品分類2"
+            value={selectedOption2}
+            options={options2}
+            onchange={handleChange2}>
+        </lightning-combobox>
+
+        <!-- クリアボタン -->
+        <lightning-button
+            label="クリア"
+            onclick={handleClear}
+            variant="neutral">
+        </lightning-button>
+
+        <!-- 商品選択 -->
+        <lightning-datatable
+            key-field="Id"
+            data={filteredData}
+            columns={columnsDatatable}
+            hide-checkbox-column={hideCheckboxColumn1}
+            onrowselection={handleRowSelection}>
+        </lightning-datatable>
+    </template>
+</template>
