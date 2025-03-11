@@ -1,0 +1,14 @@
+<template>
+    <!-- 商品編集 -->
+    <template if:true={isSecondOpen}>
+        <lightning-datatable
+            key-field="Id"
+            data={secondTableData}
+            columns={columnsAdd}
+            hide-checkbox-column={hideCheckboxColumn2}
+            onrowaction={deleteRowAction}
+            oncellchange={handleCellChange}
+            suppress-bottom-bar>
+        </lightning-datatable>
+    </template>
+</template>
