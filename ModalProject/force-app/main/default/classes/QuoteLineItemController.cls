@@ -27,9 +27,9 @@ public with sharing class QuoteLineItemController {
             SELECT Id, Pricebook__c, Product2__c, Product2__r.Name, ProductCode__c, IsActive__c, CostPrice__c, UnitPrice__c, Category1__c, Category2__c
             FROM PricebookEntryMaster__c 
             WHERE Pricebook__c = :pricebookId
-            AND Product2__c NOT IN (
-                SELECT Product2__c FROM OpportunityLineItemMaster__c WHERE Opportunity__c = :opportunityId
-            )
+            // AND Product2__c NOT IN (
+            //     SELECT Product2__c FROM OpportunityLineItemMaster__c WHERE Opportunity__c = :opportunityId
+            // )
             AND Product2__c NOT IN (
                 SELECT Product2__c FROM QuoteLineItemMaster__c WHERE Quote__c = :quoteId
             )
@@ -53,7 +53,7 @@ public with sharing class QuoteLineItemController {
             result.add(record);
         }
 
-        System.debug('取得した価格表エントリ: ' + result);
+        // System.debug('取得した価格表エントリ: ' + result);
         return result;
     }
 

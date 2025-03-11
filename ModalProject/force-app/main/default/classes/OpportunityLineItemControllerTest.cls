@@ -3,137 +3,227 @@ private class OpportunityLineItemControllerTest {
     
     @testSetup
     static void setupTestData() {
-        // 商品分類1の値を取得
-        List<String> category1Values = new List<String>();
-        for (Schema.PicklistEntry entry : Product2.Category1__c.getDescribe().getPicklistValues()) {
-            category1Values.add(entry.getValue());
-        }
 
-        // 商品分類2の値を取得
-        List<String> category2Values = new List<String>();
-        for (Schema.PicklistEntry entry : Product2.Category2__c.getDescribe().getPicklistValues()) {
-            category2Values.add(entry.getValue());
-        }
-
-        // デフォルト値を取得（選択肢がない場合に備えてリストの先頭を使用）
-        String category1Value = category1Values.isEmpty() ? null : category1Values[0];
-        String category2Value = category2Values.isEmpty() ? null : category2Values[0];
-
-        // 価格表マスタ のテストデータ作成
-        Pricebook__c pricebook = new Pricebook__c(
-            Name = 'Test Pricebook',
-            IsActive__c = true
-        );
+        // 価格表作成
+        Pricebook__c pricebook = new Pricebook__c(Name = 'Test Pricebook');
         insert pricebook;
 
-        // 商品 のテストデータ作成
+        // アカウント作成
+        Account acc = new Account(Name = 'Test Account');
+        insert acc;
+
+        // 商談作成
+        Opportunity opp = new Opportunity(Name = 'Test Opportunity', StageName = 'Prospecting', CloseDate = Date.today(), Pricebook__c = pricebook.Id, AccountId = acc.Id);
+        insert opp;
+        
+        // グローバル選択リストの有効な値を取得
+        List<Schema.PicklistEntry> category1Values = Schema.getGlobalDescribe().get('PricebookEntryMaster__c').getDescribe().fields.getMap().get('Category1__c').getDescribe().getPicklistValues();
+        List<Schema.PicklistEntry> category2Values = Schema.getGlobalDescribe().get('PricebookEntryMaster__c').getDescribe().fields.getMap().get('Category2__c').getDescribe().getPicklistValues();
+        
+        // デフォルト値を取得
+        String validCategory1 = category1Values.isEmpty() ? null : category1Values[0].getValue();
+        String validCategory2 = category2Values.isEmpty() ? null : category2Values[0].getValue();
+
+        // 商品作成
         Product2 product = new Product2(
             Name = 'Test Product',
-            Category1__c = category1Value,
-            Category2__c = category2Value,
-            IsActive = true
+            IsActive = true,
+            Category1__c = validCategory1,
+            Category2__c = validCategory2
         );
         insert product;
-
-        // 価格表エントリーマスタ のテストデータ作成
-        PricebookEntryMaster__c pricebookEntry = new PricebookEntryMaster__c(
+        
+        // 価格表エントリ作成
+        PricebookEntryMaster__c pricebookEntry1 = new PricebookEntryMaster__c(
             Pricebook__c = pricebook.Id,
             Product2__c = product.Id,
-            UnitPrice__c = 100,
             IsActive__c = true,
-            Category1__c = category1Value,
-            Category2__c = category2Value,
-            CostPrice__c = 50
+            CostPrice__c = 100,
+            UnitPrice__c = 200,
+            Category1__c = validCategory1,
+            Category2__c = validCategory2
         );
-        insert pricebookEntry;
+        insert pricebookEntry1;
 
-        // 商談 のテストデータ作成
-        Opportunity opp = new Opportunity(
-            Name = 'Test Opportunity',
-            StageName = 'Prospecting',
-            CloseDate = Date.today(),
-            Pricebook__c = pricebook.Id
+        PricebookEntryMaster__c pricebookEntry2 = new PricebookEntryMaster__c(
+            Pricebook__c = pricebook.Id,
+            Product2__c = product.Id,
+            IsActive__c = true,
+            CostPrice__c = -100,
+            UnitPrice__c = -200,
+            Category1__c = validCategory1,
+            Category2__c = validCategory2
         );
-        insert opp;
+        insert pricebookEntry2;
     }
 
     @isTest
     static void testGetOpportunityPricebookEntries() {
-        // テストデータ取得
-        Opportunity testOpp = [SELECT Id FROM Opportunity LIMIT 1];
 
-        // Apex メソッドを呼び出し
+        Opportunity opp = [SELECT Id, Pricebook__c FROM Opportunity LIMIT 1];
+        Pricebook__c pricebook = [SELECT Id FROM Pricebook__c LIMIT 1];
+        
         Test.startTest();
-        List<PricebookEntryMaster__c> entries = OpportunityLineItemController.getOpportunityPricebookEntries(testOpp.Id);
+        List<Map<String, Object>> result = OpportunityLineItemController.GetOpportunityPricebookEntries(opp.Id, pricebook.Id);
         Test.stopTest();
+        
+        System.assertNotEquals(0, result.size(), '価格表エントリが返されるべき');
+    }
 
-        // 検証
-        System.assertNotEquals(entries, null, '取得した価格表エントリが null です');
-        System.assertEquals(1, entries.size(), '取得した価格表エントリの数が期待値と異なります');
+    @isTest
+    static void testGetOpportunityHelper() {
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        Test.startTest();
+        Map<String, Id> result = OpportunityLineItemController.getOpportunityHelper(opp.Id);
+        Test.stopTest();
+        
+        System.assert(result.containsKey('pricebookId'));
+    }
 
-        // 異常系: 存在しない 商談ID
-        List<PricebookEntryMaster__c> emptyEntries = OpportunityLineItemController.getOpportunityPricebookEntries('InvalidId');
-        System.assertEquals(0, emptyEntries.size(), '無効なIDでエントリが取得されるべきではありません');
+    @isTest
+    static void testGetOpportunityHelper_MissingOpportunity() {
+        try {
+            Test.startTest();
+            OpportunityLineItemController.getOpportunityHelper(null);
+            Test.stopTest();
+            System.assert(false, '例外がスローされるべき');
+        } catch (AuraHandledException e) {
+            System.assert(true, '期待通りの例外が発生');
+        } catch (Exception e) {
+            System.assert(false, '予期しない例外が発生: ' + e.getMessage());
+        }
+    }
+
+    @isTest
+    static void testGetOpportunityHelper_InvalidOpportunity() {
+
+        Opportunity invalidOpportunity = new Opportunity(
+            Name = 'Invalid Opportunity',
+            StageName = 'Prospecting',
+            CloseDate = System.today(),
+            AccountId = [SELECT Id FROM Account LIMIT 1].Id,
+            Pricebook__c = null
+        );
+        insert invalidOpportunity;
+
+        Test.startTest();
+        try {
+            OpportunityLineItemController.getOpportunityHelper(invalidOpportunity.Id);
+            System.assert(false, '例外がスローされるべき');
+        } catch (AuraHandledException e) {
+            System.assert(true, '期待通りの例外が発生');
+        } catch (Exception e) {
+            System.assert(false, '予期しない例外が発生: ' + e.getMessage());
+        }
+        Test.stopTest();
     }
 
     @isTest
     static void testGetCategoryOptions() {
         Test.startTest();
-        Map<String, List<String>> categoryMap = OpportunityLineItemController.getCategoryOptions();
-
-        // 商談分類リストを取得
-        List<String> categoryOptions = categoryMap.containsKey('菓子') ? categoryMap.get('チョコ') : new List<String>();
-
+        Map<String, List<String>> result = OpportunityLineItemController.getCategoryOptions();
         Test.stopTest();
-
-        // 検証
-        System.assertNotEquals(categoryOptions, null, '商品分類が null です');
-        System.assert(categoryOptions.size() > 0, '商品分類が1つ以上あるべきです');
+        
+        System.assert(result.containsKey('category1'));
+        System.assert(result.containsKey('category2'));
+        System.assert(result.get('category1').size() > 0, 'category1が取得されていない');
+        System.assert(result.get('category2').size() > 0, 'category2が取得されていない');
     }
 
     @isTest
     static void testCreateLineItems() {
-        // テストデータ取得
-        Opportunity testOpp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntryMaster__c testEntry = [SELECT Id, Product2__c FROM PricebookEntryMaster__c LIMIT 1];
 
-        // 商談商品 のテストデータ作成
-        OpportunityLineItemMaster__c lineItem = new OpportunityLineItemMaster__c(
-            Opportunity__c = testOpp.Id,
-            Product2__c = testEntry.Product2__c,
-            UnitPrice__c = 100,
-            Quantity__c = 1
+        Opportunity Opp = [SELECT Id FROM Opportunity LIMIT 1];
+        PricebookEntryMaster__c pricebookEntry = [SELECT Id, Product2__c FROM PricebookEntryMaster__c LIMIT 1];
+        
+        List<OpportunityLineItemMaster__c> lineItems = new List<OpportunityLineItemMaster__c>{
+            new OpportunityLineItemMaster__c(
+                Opportunity__c = opp.Id,
+                Product2__c = pricebookEntry.Product2__c,
+                Quantity__c = 1,
+                CostPrice__c = 100,
+                UnitPrice__c = 200
+                )
+        };
+        
+        Test.startTest();
+        List<OpportunityLineItemMaster__c> result = OpportunityLineItemController.createLineItems(lineItems);
+        Test.stopTest();
+        
+        System.assertEquals(1, result.size(), '1 つの商談商品が作成されるべき');
+    }
+
+    @isTest
+    static void testCreateLineItems_NullOrEmptyList() {
+        List<OpportunityLineItemMaster__c> emptyList = new List<OpportunityLineItemMaster__c>();
+        
+        // null の場合と空リストの場合の両方をテスト
+        List<List<OpportunityLineItemMaster__c>> testCases = new List<List<OpportunityLineItemMaster__c>>{null, emptyList};
+
+        Test.startTest();
+
+        for (List<OpportunityLineItemMaster__c> testCase : testCases) {
+            try {  
+                OpportunityLineItemController.createLineItems(testCase);
+                System.assert(false, '例外がスローされるべき');
+            } catch (AuraHandledException e) {
+                System.assert(true, '期待通りの例外が発生');
+            } catch (Exception e) {
+                System.assert(false, '予期しない例外が発生: ' + e.getMessage());
+            }
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testCreateLineItems_InvalidData() {
+        // 必要なデータを取得
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        PricebookEntryMaster__c pricebookEntry1 = [SELECT Id, Product2__c FROM PricebookEntryMaster__c WHERE CostPrice__c > 0 LIMIT 1];
+        PricebookEntryMaster__c pricebookEntry2 = [SELECT Id, Product2__c FROM PricebookEntryMaster__c WHERE CostPrice__c < 0 LIMIT 1];
+
+        // 正常なデータ
+        OpportunityLineItemMaster__c lineItem1 = new OpportunityLineItemMaster__c(
+            Opportunity__c = opp.Id,
+            Product2__c = pricebookEntry1.Product2__c,
+            CostPrice__c = 100,
+            UnitPrice__c = 200,
+            Quantity__c = 2
         );
 
-        List<OpportunityLineItemMaster__c> lineItems = new List<OpportunityLineItemMaster__c>{ lineItem };
+         // 不正なデータ（必須項目が欠けている、または無効な値）
+         OpportunityLineItemMaster__c lineItem2 = new OpportunityLineItemMaster__c(
+            Opportunity__c = opp.Id,
+            UnitPrice__c = -200
+         );
 
-        // Apex メソッドを呼び出し
         Test.startTest();
-        List<OpportunityLineItemMaster__c> createdItems = OpportunityLineItemController.createLineItems(lineItems);
+        List<OpportunityLineItemMaster__c> results1 = OpportunityLineItemController.createLineItems(new List<OpportunityLineItemMaster__c>{lineItem1});
+        List<OpportunityLineItemMaster__c> results2 = OpportunityLineItemController.createLineItems(new List<OpportunityLineItemMaster__c>{lineItem2});
         Test.stopTest();
 
-        // 検証
-        System.assertNotEquals(createdItems, null, '作成された商談商品が null です');
-        System.assertEquals(1, createdItems.size(), '作成された商談商品の数が期待値と異なります');
+        // 結果確認: 成功したレコード数が1で、失敗したレコード数が1であることを確認
+        System.assertEquals(1, results1.size(), '正常なデータのレコードが結果に含まれています。');
+        System.assertEquals(1, results2.size(), '不正なデータのレコードが結果に含まれています。');
+    }
 
-        // 異常系: `null` のリスト
-        List<OpportunityLineItemMaster__c> nullResult = OpportunityLineItemController.createLineItems(null);
-        System.assertEquals(0, nullResult.size(), 'nullの入力でエントリが作成されるべきではありません');
-
-        // 異常系: 商品 が `null` のデータ
-        OpportunityLineItemMaster__c invalidLineItem = new OpportunityLineItemMaster__c(
-            Opportunity__c = testOpp.Id,
-            Product2__c = null,
-            UnitPrice__c = 100,
-            Quantity__c = 1
-        );
-
+    @isTest
+    static void testCreateLineItems_TriggerException() {
         Test.startTest();
         try {
-            OpportunityLineItemController.createLineItems(new List<OpportunityLineItemMaster__c>{ invalidLineItem });
-            System.assert(false, '商品がnullの場合、例外が発生するべきです');
+            // 完全に不正なデータを作成（必須項目なし）
+            List<OpportunityLineItemMaster__c> invalidData = new List<OpportunityLineItemMaster__c>{
+                new OpportunityLineItemMaster__c()
+            };
+            
+            OpportunityLineItemController.createLineItems(invalidData);
+            System.assert(false, '例外がスローされるべき');
         } catch (Exception e) {
-            System.assertEquals('FIELD_CUSTOM_VALIDATION_EXCEPTION', e.getTypeName(), '期待される例外が発生しませんでした');
+            String errorMessage = e.getMessage();
+            Boolean isExpectedException = errorMessage.contains('商談商品の作成中にエラーが発生しました。') || errorMessage.contains('Script-thrown exception');
+
+            System.assert(isExpectedException, '予期しない例外が発生: ' + errorMessage);
         }
         Test.stopTest();
     }

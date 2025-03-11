@@ -1,16 +1,15 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import getQuotePricebookEntries from '@salesforce/apex/QuoteLineItemController.getQuotePricebookEntries';
-import getQuoteHelper from '@salesforce/apex/QuoteLineItemController.getQuoteHelper';
+import getOpportunityPricebookEntries from '@salesforce/apex/OpportunityLineItemController.getOpportunityPricebookEntries';
+import getOpportunityHelper from '@salesforce/apex/OpportunityLineItemController.getOpportunityHelper';
 import getCategoryOptions from '@salesforce/apex/QuoteLineItemController.getCategoryOptions';
 import { getRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 
-const QUOTE_FIELDS = ['Quote__c.Id'];
+const OPPORTUNITY_FIELDS = ['Opportunity.Id'];
 
-export default class QuoteSelectionData extends LightningElement {
+export default class OpportunitySelectionData extends LightningElement {
     @api recordId;                                   // レコードID
     @api get gridData() { return this._gridData; }   // 外部から _gridData を取得するためのメソッド
-    @track quoteId;                                  // 見積レコードのID
     @track opportunityId;                            // 商談レコードのID
     @track pricebookId;                              // 価格表マスタレコードのID
     _gridData = [];                                  // 内部データ格納用の配列
@@ -18,15 +17,16 @@ export default class QuoteSelectionData extends LightningElement {
     _options2 = [];                                  // 商品分類2を格納する配列
     wiredQuoteResult;                                // refreshApex 用の変数
     
-    @wire(getRecord, { recordId: '$recordId', fields: QUOTE_FIELDS })
-    wiredQuote(result) {
-        this.wiredQuoteResult = result; // refreshApex の対象として保存
+    @wire(getRecord, { recordId: '$recordId', fields: OPPORTUNITY_FIELDS })
+    wiredOpportunity(result) {
+        this.wiredOpportunityResult = result; // refreshApex の対象として保存
         const { data, error } = result;
 
         if (data) {
-            this.quoteId = data.fields.Id.value;
 
-            if (this.quoteId) {
+            this.opportunityId = data.fields?.Id?.value;
+
+            if (this.opportunityId) {
                 this.loadProducts();
                 this.loadCategoryOptions();
             }
@@ -37,22 +37,33 @@ export default class QuoteSelectionData extends LightningElement {
 
     //商品リストの取得
     async loadProducts() {
+        if (!this.opportunityId) {
+            console.error('opportunityId が未取得のため、商品リストの取得をスキップ');
+            return;
+        }
+
         try {
-            // 見積ID、商談Id、価格表マスタIdを取得
-            const dependencies = await getQuoteHelper({ quoteId: this.quoteId });
-            if (!dependencies || !dependencies.opportunityId || !dependencies.pricebookId) {
-                throw new Error('見積、商談、価格表マスタのいずれかの取得に失敗しました。');
+
+            // 商談Id、価格表マスタIdを取得
+            const dependencies = await getOpportunityHelper({ opportunityId: this.opportunityId });
+            if (!dependencies || !dependencies.pricebookId) {
+                console.error('価格表の取得に失敗:', dependencies);
+
+                return;
             }
 
+            this.pricebookId = dependencies.pricebookId;
+
             // 価格表エントリを取得
-            const data = await getQuotePricebookEntries({
-                quoteId: this.quoteId,
-                opportunityId: dependencies.opportunityId,
-                pricebookId: dependencies.pricebookId
+            const data = await getOpportunityPricebookEntries({
+                opportunityId: this.opportunityId,
+                pricebookId: this.pricebookId
             });
             
             if (!data || !Array.isArray(data)) {
-                throw new Error('取得データが配列ではありません。');
+                console.error('価格表エントリの取得結果が不正:', data);
+
+                return;
             }
             
             this.gridData = data.map(item => ({
@@ -66,6 +77,7 @@ export default class QuoteSelectionData extends LightningElement {
                 Category1: item.Category1__c,
                 Category2: item.Category2__c
             }));
+
         } catch (error) {
             console.error('商品データの取得エラー:', error);
         }
@@ -113,7 +125,7 @@ export default class QuoteSelectionData extends LightningElement {
     // データのリフレッシュ
     @api
     refreshData() {
-        return refreshApex(this.wiredQuoteResult)// データを最新化
+        return refreshApex(this.wiredOpportunityIdResult)// データを最新化
             .then(() => {
                 return this.loadProducts(); // 最新化後の商品データを取得
             })
