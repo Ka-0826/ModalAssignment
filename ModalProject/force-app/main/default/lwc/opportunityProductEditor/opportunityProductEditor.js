@@ -1,8 +1,8 @@
 import { api, track } from 'lwc';
 import { showToast } from 'c/commonUtils';
-import QuoteSelectionData from 'c/quoteSelectionData';
+import OpportunitySelectionData from 'c/opportunitySelectionData';
 
-export default class ProductEditor extends QuoteSelectionData {
+export default class OpportunityProductEditor extends OpportunitySelectionData {
     // 商品編集画面のヘッダー行
     columnsAdd = [
         { label: '商品名', fieldName: 'Name', type: 'text', editable: false },
@@ -91,7 +91,6 @@ export default class ProductEditor extends QuoteSelectionData {
     // データをリフレッシュ
     @api
     refreshData() {
-        console.log('ProductEditor の refreshData() 実行');
         return super.refreshData()
             .then(() => console.log('親クラスの refreshData() 呼び出し完了'))
             .catch(error => console.error('親クラスの refreshData() 呼び出しエラー:', error));

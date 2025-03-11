@@ -1,22 +1,11 @@
 public with sharing class OpportunityLineItemController {
 
     @AuraEnabled(cacheable=true)
-    public static List<PricebookEntryMaster__c> getOpportunityPricebookEntries(Id opportunityId) {
-        System.debug('Apex メソッドが呼ばれました。opportunityId: ' + opportunityId);
+    public static List<Map<String, Object>> getOpportunityPricebookEntries(Id opportunityId, Id pricebookId) {
         
-        // recordId が null の場合はエラーを返す
-        if (opportunityId == null) {
-            throw new AuraHandledException('opportunityId が null です');
+        if (opportunityId == null || pricebookId == null) {
+            throw new AuraHandledException('必須のIDが不足しています。');
         }
-        
-        // 商談に紐づく価格表マスタを取得
-        Opportunity opp = [SELECT Pricebook__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
-
-        if (opp == null || opp.Pricebook__c == null) {
-            throw new AuraHandledException('商談に価格表が設定されていません。');
-        }
-        
-        Id pricebookId = opp.Pricebook__c;
 
         // グローバル値セットの選択リストを取得
         Map<String, String> category1Map = new Map<String, String>();
@@ -31,14 +20,13 @@ public with sharing class OpportunityLineItemController {
         for (Schema.PicklistEntry entry : category2Field.getPicklistValues()) {
             category2Map.put(entry.getValue(), entry.getLabel());
         }
-        
+
         // 価格表エントリマスタを取得
         List<PricebookEntryMaster__c> pricebookEntries = [
             SELECT Id, Pricebook__c, Product2__c, Product2__r.Name, ProductCode__c, IsActive__c, CostPrice__c, UnitPrice__c, Category1__c, Category2__c
             FROM PricebookEntryMaster__c 
             WHERE Pricebook__c = :pricebookId
             AND Product2__c NOT IN (
-                // 商談に紐づく商談商品を除外
             	SELECT Product2__c
                 FROM OpportunityLineItemMaster__c 
                 WHERE Opportunity__c = :opportunityId
@@ -57,34 +45,48 @@ public with sharing class OpportunityLineItemController {
             record.put('IsActive__c', entry.IsActive__c);
             record.put('CostPrice__c', entry.CostPrice__c);
             record.put('UnitPrice__c', entry.UnitPrice__c);
-            
-            // API参照名を表示ラベルに変換
             record.put('Category1__c', category1Map.get(entry.Category1__c));
             record.put('Category2__c', category2Map.get(entry.Category2__c));
 
             result.add(record);
         }
         
-        System.debug('取得した価格表エントリ: ' + pricebookEntries);
-        return pricebookEntries;
+        return result;
     }
-    
+
+    // 商談、価格表を取得
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Id> getOpportunityHelper(Id opportunityId) {
+
+        if (opportunityId == null) {
+            throw new AuraHandledException('opportunityId が NULL です');
+        }
+
+        Opportunity opp = [SELECT Pricebook__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        if (opp == null || opp.Pricebook__c == null) {
+            throw new AuraHandledException('商談に価格表が設定されていません。');
+        }
+
+        return new Map<String, Id>{
+            'pricebookId' => opp.Pricebook__c
+        };
+    }   
+
+    // 商品分類の値を取得
     @AuraEnabled(cacheable=true)
     public static Map<String, List<String>> getCategoryOptions() {
         Map<String, List<String>> result = new Map<String, List<String>>();
     
-        // カテゴリ1のユニーク値を取得
         List<String> category1List = new List<String>();
         Schema.DescribeFieldResult category1Field = PricebookEntryMaster__c.Category1__c.getDescribe();
         for (Schema.PicklistEntry entry : category1Field.getPicklistValues()) {
-            category1List.add(entry.getLabel()); // 画面表示用
+            category1List.add(entry.getLabel());
         }
     
-        // カテゴリ2のユニーク値を取得
         List<String> category2List = new List<String>();
         Schema.DescribeFieldResult category2Field = PricebookEntryMaster__c.Category2__c.getDescribe();
         for (Schema.PicklistEntry entry : category2Field.getPicklistValues()) {
-            category2List.add(entry.getLabel()); // 画面表示用
+            category2List.add(entry.getLabel());
         }
     
         result.put('category1', category1List);
@@ -99,23 +101,11 @@ public with sharing class OpportunityLineItemController {
         }
         
         try {
-            // DML 処理を部分成功可能にする
-            Database.SaveResult[] results = Database.insert(finalData, false);
-            List<OpportunityLineItemMaster__c> successfulRecords = new List<OpportunityLineItemMaster__c>();
-
-            for (Integer i = 0; i < results.size(); i++) {
-                if (results[i].isSuccess()) {
-                    successfulRecords.add(finalData[i]);
-                } else {
-                    for (Database.Error err : results[i].getErrors()) {
-                        System.debug('レコード挿入エラー: ' + err.getMessage());
-                    }
-                }
-            }
-        
-            return successfulRecords;
-        } catch (Exception e) {
-            throw new AuraHandledException('見積品目の作成中にエラーが発生しました: ' + e.getMessage());
+            insert finalData;
+        } catch (DmlException e) {
+            throw new AuraHandledException('商談商品の作成中にエラーが発生しました。' + e.getMessage());
         }
+
+        return finalData;
     }
 }

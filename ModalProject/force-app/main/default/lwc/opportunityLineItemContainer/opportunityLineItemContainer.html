@@ -1,0 +1,38 @@
+<template>
+    <c-common-modal title="商品を追加" onclose={handleCloseModal}>
+        <!-- 本文スロット -->
+        <span slot="body">
+            <template if:true={isFirstOpen}>
+                <c-opportunity-product-selection
+                    record-id={recordId}
+                    onnext={handleNext}>
+                </c-opportunity-product-selection>
+            </template>
+            <template if:true={isSecondOpen}>
+                <c-opportunity-product-editor
+                    selected-products={selectedProducts}
+                    onsave={handleSave}>
+                </c-opportunity-product-editor>
+            </template>
+        </span>
+
+        <!-- フッタースロット -->
+        <div slot="footer">
+            <template if:true={isFirstOpen}>
+                <lightning-button 
+                    label="次へ" 
+                    variant="neutral" 
+                    onclick={handleNextFromChild}>
+                </lightning-button>
+            </template>
+
+            <template if:true={isSecondOpen}>
+                <lightning-button 
+                    label="保存" 
+                    variant="brand" 
+                    onclick={handleSaveFromChild}>
+                </lightning-button>
+            </template>
+        </div>
+    </c-common-modal>
+</template>
