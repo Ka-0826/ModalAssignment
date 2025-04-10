@@ -4,7 +4,7 @@
 このプロジェクトは、Salesforceで見積のための機能を実装したものです。  
 具体的には、LWC（Lightning Web Components）を使用して商品を選択し、見積金額を計算する機能を提供します。  
 また、商談や価格表といった関連レコードからも商品を追加できるように実装しました。  
-![Image](https://github.com/user-attachments/assets/6f4e40ce-6855-4775-945c-7819748d5959)
+![Image](https://github.com/user-attachments/assets/393430a7-82b9-4037-950d-f66b96ee945c)
 
 ### 主な機能
 ##### 見積機能
