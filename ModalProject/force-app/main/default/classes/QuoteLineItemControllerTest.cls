@@ -10,6 +10,7 @@ private class QuoteLineItemControllerTest {
         Account acc = new Account(Name = 'Test Account');
         insert acc;
 
+        // 商談作成
         Opportunity opp = new Opportunity(Name = 'Test Opportunity', StageName = 'Prospecting', CloseDate = Date.today(), Pricebook__c = pricebook.Id, AccountId = acc.Id);
         insert opp;
         
